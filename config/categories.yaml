@@ -1,0 +1,37 @@
+# Per-category rules. Everything the scorer needs to decide "is this worth an email".
+#
+# min_saving   minimum effective cash saving in GBP (discount + cashback + Amex credit)
+# min_pct      minimum effective discount (0.15 = 15%)
+# cooldown_days  after you buy in this category, similar alerts are held back this long
+# warranty_months  default manufacturer warranty assumed for post-purchase reminders (0 = none)
+# post_purchase_min  only track price drops / return windows for purchases at or above this price
+
+coffee:        {min_saving: 5,  min_pct: 0.15, cooldown_days: 7,   warranty_months: 0,  post_purchase_min: 40}
+groceries:     {min_saving: 10, min_pct: 0.30, cooldown_days: 3,   warranty_months: 0,  post_purchase_min: 9999}
+supplements:   {min_saving: 8,  min_pct: 0.20, cooldown_days: 14,  warranty_months: 0,  post_purchase_min: 50}
+clothes:       {min_saving: 15, min_pct: 0.20, cooldown_days: 30,  warranty_months: 0,  post_purchase_min: 40}
+footwear:      {min_saving: 15, min_pct: 0.20, cooldown_days: 45,  warranty_months: 0,  post_purchase_min: 50}
+homeware:      {min_saving: 15, min_pct: 0.15, cooldown_days: 30,  warranty_months: 12, post_purchase_min: 50}
+furniture:     {min_saving: 40, min_pct: 0.15, cooldown_days: 180, warranty_months: 12, post_purchase_min: 100}
+diy:           {min_saving: 15, min_pct: 0.15, cooldown_days: 30,  warranty_months: 12, post_purchase_min: 50}
+electronics:   {min_saving: 25, min_pct: 0.15, cooldown_days: 60,  warranty_months: 12, post_purchase_min: 75}
+large_electronics: {min_saving: 60, min_pct: 0.15, cooldown_days: 180, warranty_months: 12, post_purchase_min: 150}
+travel:        {min_saving: 40, min_pct: 0.15, cooldown_days: 21,  warranty_months: 0,  post_purchase_min: 100}
+restaurants:   {min_saving: 8,  min_pct: 0.25, cooldown_days: 7,   warranty_months: 0,  post_purchase_min: 9999}
+takeaway:      {min_saving: 8,  min_pct: 0.30, cooldown_days: 7,   warranty_months: 0,  post_purchase_min: 9999}
+subscriptions: {min_saving: 20, min_pct: 0.20, cooldown_days: 60,  warranty_months: 0,  post_purchase_min: 9999}
+finance:       {min_saving: 100, min_pct: 0.0, cooldown_days: 90,  warranty_months: 0,  post_purchase_min: 9999}
+events:        {min_saving: 20, min_pct: 0.20, cooldown_days: 14,  warranty_months: 0,  post_purchase_min: 9999}
+f1:            {min_saving: 0,  min_pct: 0.0,  cooldown_days: 0,   warranty_months: 0,  post_purchase_min: 9999}
+gifts:         {min_saving: 15, min_pct: 0.25, cooldown_days: 14,  warranty_months: 0,  post_purchase_min: 50}
+christmas:     {min_saving: 10, min_pct: 0.30, cooldown_days: 14,  warranty_months: 0,  post_purchase_min: 50}
+fuel_car:      {min_saving: 20, min_pct: 0.15, cooldown_days: 30,  warranty_months: 0,  post_purchase_min: 9999}
+other:         {min_saving: 25, min_pct: 0.25, cooldown_days: 30,  warranty_months: 0,  post_purchase_min: 100}
+
+# Known UK sale events. If one of these starts within `wait_days` and the offer is not
+# a genuine low, the verdict becomes WAIT instead of BUY NOW for these categories.
+sale_events:
+  - {name: Black Friday,    month: 11, day: 20, wait_days: 28, categories: [electronics, large_electronics, homeware, clothes, footwear, supplements, coffee, gifts, furniture, diy]}
+  - {name: Boxing Day sales, month: 12, day: 26, wait_days: 14, categories: [clothes, footwear, homeware, furniture, christmas]}
+  - {name: January sales,   month: 1,  day: 2,  wait_days: 14, categories: [furniture, homeware, clothes]}
+  - {name: Prime Day,       month: 7,  day: 8,  wait_days: 21, categories: [electronics, large_electronics, coffee, homeware]}

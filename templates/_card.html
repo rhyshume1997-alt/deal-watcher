@@ -1,0 +1,23 @@
+{% macro card(a) -%}
+{% set colour = {'BUY NOW': '#0a7d33', 'WAIT': '#b36b00', 'IGNORE': '#666666'}[a.verdict] %}
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border:1px solid #e3e3e3;border-radius:10px;margin:0 0 16px 0;">
+<tr><td style="padding:16px 18px;font-family:-apple-system,Segoe UI,Helvetica,Arial,sans-serif;color:#111;">
+  <div style="font-size:13px;font-weight:700;letter-spacing:.06em;color:{{ colour }};">{{ a.verdict }}</div>
+  <div style="font-size:20px;font-weight:700;margin:4px 0 2px 0;">{{ a.headline }}</div>
+  <div style="font-size:16px;margin:0 0 10px 0;">{{ a.offer_line }}</div>
+  {% for r in a.reasons[:3] %}<div style="font-size:14px;color:#333;margin:2px 0;">• {{ r }}</div>{% endfor %}
+  {% if a.history_note %}<div style="font-size:14px;color:#333;margin:2px 0;">• {{ a.history_note }}</div>{% endif %}
+  <table role="presentation" cellpadding="0" cellspacing="0" style="margin:10px 0 4px 0;font-size:15px;">
+    {% if a.cash_saving %}<tr><td style="padding:1px 12px 1px 0;">Cash saving</td><td style="font-weight:700;">£{{ '%.2f'|format(a.cash_saving) }}</td></tr>{% endif %}
+    {% for k, v in a.components.items() %}{% if a.components|length > 1 or k != 'Retailer discount' %}<tr><td style="padding:1px 12px 1px 0;color:#555;">{{ k }}</td><td style="color:#555;">£{{ '%.2f'|format(v) }}</td></tr>{% endif %}{% endfor %}
+    {% if a.avios %}<tr><td style="padding:1px 12px 1px 0;">Avios</td><td style="font-weight:700;">{{ '{:,}'.format(a.avios) }}</td></tr>{% endif %}
+    {% if a.code %}<tr><td style="padding:1px 12px 1px 0;">Code</td><td style="font-family:monospace;font-weight:700;">{{ a.code }}</td></tr>{% endif %}
+  </table>
+  {% if a.urgency_note %}<div style="font-size:14px;font-weight:700;color:#b00020;margin:6px 0;">{{ a.urgency_note }}</div>{% endif %}
+  <div style="margin-top:12px;">
+    <a href="{{ a.view_link }}" style="display:inline-block;background:#111;color:#fff;text-decoration:none;padding:9px 16px;border-radius:6px;font-size:15px;font-weight:600;">View offer</a>
+    <a href="{{ a.useful_link }}" style="display:inline-block;color:#0a7d33;text-decoration:none;padding:9px 10px;font-size:14px;">👍 Useful</a>
+    <a href="{{ a.not_useful_link }}" style="display:inline-block;color:#b00020;text-decoration:none;padding:9px 10px;font-size:14px;">👎 Not useful</a>
+  </div>
+</td></tr></table>
+{%- endmacro %}

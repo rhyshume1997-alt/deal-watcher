@@ -1,0 +1,23 @@
+<!doctype html><html><body style="margin:0;padding:16px;background:#fafafa;">
+<div style="max-width:560px;margin:0 auto;font-family:-apple-system,Segoe UI,Helvetica,Arial,sans-serif;color:#111;">
+<div style="font-size:22px;font-weight:700;margin-bottom:4px;">{{ month }} summary</div>
+<table role="presentation" cellpadding="0" cellspacing="0" style="font-size:16px;margin:12px 0;">
+<tr><td style="padding:3px 16px 3px 0;">Estimated money saved</td><td style="font-weight:700;">£{{ '%.0f'|format(s.saved) }}</td></tr>
+<tr><td style="padding:3px 16px 3px 0;">Offers acted on</td><td style="font-weight:700;">{{ s.acted }}</td></tr>
+<tr><td style="padding:3px 16px 3px 0;">Alerts sent (instant / digest)</td><td>{{ s.instant }} / {{ s.digest }}</td></tr>
+<tr><td style="padding:3px 16px 3px 0;">Clicked</td><td>{{ s.clicked }}</td></tr>
+<tr><td style="padding:3px 16px 3px 0;">Useful / Not useful</td><td>{{ s.useful }} / {{ s.not_useful }}</td></tr>
+<tr><td style="padding:3px 16px 3px 0;">Alerts ignored</td><td>{{ s.ignored }}</td></tr>
+<tr><td style="padding:3px 16px 3px 0;">Bad offers suppressed</td><td>{{ s.suppressed }}</td></tr>
+{% if s.avios %}<tr><td style="padding:3px 16px 3px 0;">Avios from offers acted on</td><td>{{ '{:,}'.format(s.avios) }}</td></tr>{% endif %}
+</table>
+{% if s.top_categories %}<div style="font-weight:700;margin-top:16px;">Most useful categories</div>
+{% for c, n in s.top_categories %}<div style="font-size:14px;">• {{ c }} ({{ n }})</div>{% endfor %}{% endif %}
+{% if s.top_suppressed %}<div style="font-weight:700;margin-top:16px;">Most common reasons offers were filtered out</div>
+{% for r, n in s.top_suppressed %}<div style="font-size:14px;">• {{ r }} ({{ n }})</div>{% endfor %}{% endif %}
+{% if s.learning %}<div style="font-weight:700;margin-top:16px;">What the system learnt</div>
+{% for l in s.learning %}<div style="font-size:14px;">• {{ l }}</div>{% endfor %}{% endif %}
+{% if s.subscriptions %}<div style="font-weight:700;margin-top:16px;">Recurring costs tracked</div>
+{% for x in s.subscriptions %}<div style="font-size:14px;">• {{ x.service }} – £{{ '%.2f'|format(x.amount) }} {{ x.cycle }}{% if x.next_renewal %}, next {{ x.next_renewal }}{% endif %}</div>{% endfor %}{% endif %}
+<div style="font-size:12px;color:#888;margin-top:20px;">Nothing to do. This is just so you can see it's working.</div>
+</div></body></html>

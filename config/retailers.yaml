@@ -1,0 +1,46 @@
+# Known retailers. `aliases` are matched case-insensitively against statement descriptions,
+# email senders and deal titles. `return_days` are typical change-of-mind windows and are
+# only used when a receipt email doesn't state one - treat as a reminder, not legal advice.
+# Add a retailer by adding an entry; nothing else needs changing.
+
+- {name: Nespresso,     category: coffee,      aliases: [nespresso],                         domains: [nespresso.com],      return_days: 14}
+- {name: M&S,           category: groceries,   aliases: ["m&s", "marks & spencer", "marks and spencer", "marks&spencer", "m and s"], domains: [marksandspencer.com], return_days: 35}
+- {name: B&Q,           category: diy,         aliases: ["b&q", "bandq", "b and q", "b & q"], domains: [diy.com],            return_days: 90}
+- {name: The Range,     category: homeware,    aliases: ["the range", "therange", "range ltd", "cds superstores"], domains: [therange.co.uk], return_days: 28}
+- {name: B&M,           category: homeware,    aliases: ["b&m", "b & m", "b and m", "bm retail"], domains: [bmstores.co.uk],     return_days: 28}
+- {name: Costco,        category: groceries,   aliases: [costco],                            domains: [costco.co.uk],       return_days: 90}
+- {name: Amazon,        category: other,       aliases: [amazon, "amzn", "prime video", "amazon prime"], domains: [amazon.co.uk], return_days: 30}
+- {name: Currys,        category: electronics, aliases: [currys, "dsg retail"],              domains: [currys.co.uk],       return_days: 21}
+- {name: British Airways, category: travel,    aliases: ["british airways", "british a", "ba.com", "ba holidays"], domains: [ba.com, britishairways.com], return_days: 0}
+- {name: ASOS,          category: clothes,     aliases: [asos],                              domains: [asos.com],           return_days: 28}
+- {name: Zara,          category: clothes,     aliases: [zara],                              domains: [zara.com],           return_days: 30}
+- {name: Primark,       category: clothes,     aliases: [primark],                           domains: [primark.com],        return_days: 28}
+- {name: JD Sports,     category: footwear,    aliases: ["jd sports", "jdsports", "jd sport"], domains: [jdsports.co.uk],   return_days: 28}
+- {name: New Balance,   category: footwear,    aliases: ["new balance", "newbalance"],       domains: [newbalance.co.uk],   return_days: 30}
+- {name: TALA,          category: clothes,     aliases: [tala, "wearetala"],                 domains: [wearetala.com],      return_days: 30}
+- {name: Myprotein,     category: supplements, aliases: [myprotein, "the hut group", "thg"], domains: [myprotein.com],      return_days: 14}
+- {name: Pitstop Nutrition, category: supplements, aliases: [pitstop],                       domains: [],                   return_days: 14}
+- {name: PER4M,         category: supplements, aliases: [per4m],                             domains: [per4m.co.uk],        return_days: 14}
+- {name: Lidl,          category: groceries,   aliases: [lidl],                              domains: [lidl.co.uk],         return_days: 30}
+- {name: Aldi,          category: groceries,   aliases: [aldi],                              domains: [aldi.co.uk],         return_days: 30}
+- {name: Tesco,         category: groceries,   aliases: [tesco],                             domains: [tesco.com],          return_days: 30}
+- {name: Morrisons,     category: groceries,   aliases: [morrisons, "wm morrison"],          domains: [morrisons.com],      return_days: 30}
+- {name: IKEA,          category: furniture,   aliases: [ikea],                              domains: [ikea.com],           return_days: 365}
+- {name: Dunelm,        category: homeware,    aliases: [dunelm],                            domains: [dunelm.com],         return_days: 28}
+- {name: Argos,         category: electronics, aliases: [argos],                             domains: [argos.co.uk],        return_days: 30}
+- {name: John Lewis,    category: homeware,    aliases: ["john lewis", "johnlewis"],         domains: [johnlewis.com],      return_days: 35}
+- {name: Deliveroo,     category: takeaway,    aliases: [deliveroo],                         domains: [deliveroo.co.uk],    return_days: 0}
+- {name: Just Eat,      category: takeaway,    aliases: ["just eat", "just-eat", "justeat"], domains: [just-eat.co.uk],     return_days: 0}
+- {name: Uber Eats,     category: takeaway,    aliases: ["uber eats", "ubereats"],           domains: [uber.com],           return_days: 0}
+- {name: Booking.com,   category: travel,      aliases: ["booking.com", "bkg*"],             domains: [booking.com],        return_days: 0}
+- {name: Airbnb,        category: travel,      aliases: [airbnb],                            domains: [airbnb.co.uk, airbnb.com], return_days: 0}
+- {name: Discover Car Hire, category: travel,  aliases: ["discover car hire", "discovercars"], domains: [discovercars.com],  return_days: 0}
+- {name: Glasgow Airport, category: travel,    aliases: ["glasgow airport", "jetpay", "gla parking"], domains: [glasgowairport.com, jetpayairportparking.co.uk], return_days: 0}
+- {name: ScotRail,      category: travel,      aliases: [scotrail],                          domains: [scotrail.co.uk],     return_days: 0}
+- {name: Ticketmaster,  category: events,      aliases: [ticketmaster],                      domains: [ticketmaster.co.uk], return_days: 0}
+- {name: Canva,         category: subscriptions, aliases: [canva],                           domains: [canva.com],          return_days: 0}
+- {name: Spotify,       category: subscriptions, aliases: [spotify],                         domains: [spotify.com],        return_days: 0}
+- {name: Netflix,       category: subscriptions, aliases: [netflix],                         domains: [netflix.com],        return_days: 0}
+- {name: Google,        category: subscriptions, aliases: ["google", "youtube premium", "google one"], domains: [google.com], return_days: 0}
+- {name: Apple,         category: subscriptions, aliases: ["apple.com/bill", "apple services", "itunes"], domains: [apple.com], return_days: 0}
+- {name: Formula 1,     category: f1,          aliases: ["formula 1", "f1 tickets", "f1experiences", "silverstone"], domains: [formula1.com, silverstone.co.uk, f1experiences.com], return_days: 0}

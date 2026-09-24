@@ -1,0 +1,67 @@
+# Where deals come from. Add a source by adding an entry here.
+#
+# kind:
+#   deal_feed   - community deal RSS (HotUKDeals). Every post is scored.
+#   blog_feed   - editorial RSS (Head for Points, MSE). Posts are scored; most are travel/finance.
+#   news_query  - Google News RSS search. Good for F1 ticket releases and presales.
+#   page_watch  - fetch a page and alert when watched phrases appear/disappear (ticket pages, restocks).
+# urls: tried in order until one works (sites move their feeds around).
+# interval_min: minimum minutes between checks.
+# keywords: for blog/news feeds, only posts matching at least one keyword are kept.
+
+deal_feed:
+  - id: hukd_hot
+    urls: ["https://www.hotukdeals.com/rss/hot"]
+    interval_min: 30
+  - id: hukd_new
+    urls: ["https://www.hotukdeals.com/rss/new"]
+    interval_min: 30
+    min_heat: 150            # new posts are noisy; only keep ones the community already likes
+  - id: hukd_freebies
+    urls: ["https://www.hotukdeals.com/rss/freebies", "https://www.hotukdeals.com/rss/tag/freebies"]
+    interval_min: 120
+
+blog_feed:
+  - id: headforpoints
+    urls: ["https://www.headforpoints.com/feed/"]
+    interval_min: 120
+    keywords: [amex, american express, avios, british airways, " ba ", reward flight, sale, bonus, offer, companion voucher, lounge]
+  - id: insideflyer
+    urls: ["https://www.insideflyer.co.uk/feed/"]
+    interval_min: 240
+    keywords: [amex, american express, avios, british airways, bonus, sale]
+  - id: mse
+    urls: ["https://www.moneysavingexpert.com/news/rss/", "https://www.moneysavingexpert.com/news/feed/"]
+    interval_min: 240
+    keywords: [switch, bonus, free, cashback, amex, american express, isa, savings, energy, broadband, mobile, price rise, insurance, deal]
+
+news_query:
+  - id: f1_british_gp
+    q: '"British Grand Prix" tickets'
+    interval_min: 60
+    category: f1
+    keywords: [ticket, presale, pre-sale, on sale, release, sold out, general sale, hospitality]
+  - id: f1_europe
+    q: 'F1 tickets presale OR "on sale" (Silverstone OR Spa OR Zandvoort OR Monza OR Barcelona OR Madrid OR Monaco OR Hungaroring)'
+    interval_min: 120
+    category: f1
+    keywords: [ticket, presale, pre-sale, on sale, release, sold out]
+  - id: amex_offers
+    q: '"Amex Offer" UK'
+    interval_min: 360
+    category: finance
+    keywords: [amex offer, american express offer, spend, get]
+
+page_watch:
+  - id: silverstone_tickets
+    url: "https://www.silverstone.co.uk/events/formula-1-british-grand-prix"
+    interval_min: 30
+    category: f1
+    title: Silverstone - British Grand Prix tickets
+    alert_on: [on sale now, buy tickets, presale, pre-sale, general sale, waiting list, released, restock, back on sale]
+  - id: f1_tickets_gb
+    url: "https://tickets.formula1.com/en/f1-3304-great-britain"
+    interval_min: 30
+    category: f1
+    title: F1 Tickets - British Grand Prix
+    alert_on: [buy now, on sale, presale, pre-sale, sold out, available, waiting list]

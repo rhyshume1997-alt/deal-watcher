@@ -56,6 +56,9 @@ def main(argv: list[str] | None = None) -> int:
         print("tables ready")
         return 0
     db.metadata.create_all(engine)  # harmless if they exist
+    if not settings().link_secret:
+        with engine.begin() as conn:
+            settings().link_secret = db.load_link_secret(conn)
 
     from . import actions, pipeline, profile
 

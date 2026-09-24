@@ -234,3 +234,14 @@ def insert_ignore(conn, table: Table, values: dict, unique_col: str) -> int | No
     res = conn.execute(insert(table).values(**values))
     pk = res.inserted_primary_key
     return pk[0] if pk else None
+
+
+def load_link_secret(conn) -> str:
+    """The secret that signs email links lives in the database, shared with the tracking function."""
+    import secrets
+
+    val = get_state(conn, "link_secret")
+    if not val:
+        val = secrets.token_hex(32)
+        set_state(conn, "link_secret", val)
+    return val

@@ -5,7 +5,7 @@
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
-const LINK_SECRET = Deno.env.get("LINK_SECRET") ?? "";
+let LINK_SECRET = Deno.env.get("LINK_SECRET") ?? "";  // else read from the state table
 
 const rest = (path: string, init: RequestInit = {}) =>
   fetch(`${SUPABASE_URL}/rest/v1/${path}`, {
@@ -39,6 +39,11 @@ Deno.serve(async (req) => {
   const e = u.searchParams.get("e") ?? "";
   const s = u.searchParams.get("s") ?? "";
   if (!/^\d+$/.test(a) || !["click", "useful", "not_useful"].includes(e)) return page("Link not recognised", 400);
+  if (!LINK_SECRET) {
+    const r = await rest("state?key=eq.link_secret&select=value", { headers: { Prefer: "" } });
+    const rows = r.ok ? await r.json() : [];
+    LINK_SECRET = rows.length ? String(rows[0].value) : "";
+  }
   if (!LINK_SECRET || s !== await sign(`${a}:${e}`)) return page("Link not recognised", 403);
 
   const res = await rest(`alerts?id=eq.${a}&select=id,url,clicked_at,feedback`, { headers: { Prefer: "" } });

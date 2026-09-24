@@ -29,7 +29,7 @@ class Settings:
     llm_monthly_call_cap: int = field(default_factory=lambda: int(_env("LLM_MONTHLY_CALL_CAP", "3000")))
     keepa_api_key: str = field(default_factory=lambda: _env("KEEPA_API_KEY"))
     track_base_url: str = field(default_factory=lambda: _env("TRACK_BASE_URL"))
-    link_secret: str = field(default_factory=lambda: _env("LINK_SECRET", "dev-secret"))
+    link_secret: str = field(default_factory=lambda: _env("LINK_SECRET"))  # else read from the database
     dry_run: bool = field(default_factory=lambda: _env("DRY_RUN", "0") == "1")
     gmail_backfill_days: int = field(default_factory=lambda: int(_env("GMAIL_BACKFILL_DAYS", "365")))
 

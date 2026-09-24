@@ -26,6 +26,8 @@ f1:            {min_saving: 0,  min_pct: 0.0,  cooldown_days: 0,   warranty_mont
 gifts:         {min_saving: 15, min_pct: 0.25, cooldown_days: 14,  warranty_months: 0,  post_purchase_min: 50}
 christmas:     {min_saving: 10, min_pct: 0.30, cooldown_days: 14,  warranty_months: 0,  post_purchase_min: 50}
 fuel_car:      {min_saving: 20, min_pct: 0.15, cooldown_days: 30,  warranty_months: 0,  post_purchase_min: 9999}
+business:      {min_saving: 50, min_pct: 0.25, cooldown_days: 30,  warranty_months: 0,  post_purchase_min: 9999}
+personal_care: {min_saving: 10, min_pct: 0.25, cooldown_days: 21,  warranty_months: 0,  post_purchase_min: 9999}
 other:         {min_saving: 25, min_pct: 0.25, cooldown_days: 30,  warranty_months: 0,  post_purchase_min: 100}
 
 # Known UK sale events. If one of these starts within `wait_days` and the offer is not

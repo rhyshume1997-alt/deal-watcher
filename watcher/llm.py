@@ -22,7 +22,7 @@ _FALLBACK_MODELS = {"claude-opus-5", "claude-fable-5-1"}
 CATEGORIES = [
     "coffee", "groceries", "supplements", "clothes", "footwear", "homeware", "furniture", "diy",
     "electronics", "large_electronics", "travel", "restaurants", "takeaway", "subscriptions",
-    "finance", "events", "f1", "gifts", "christmas", "fuel_car", "other",
+    "finance", "events", "f1", "gifts", "christmas", "fuel_car", "business", "personal_care", "other",
 ]
 
 

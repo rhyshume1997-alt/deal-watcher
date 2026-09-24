@@ -44,8 +44,8 @@ def build(conn, days: int = 365, today: date | None = None) -> SpendProfile:
     p = SpendProfile()
     if not rows:
         return p
-    first = min(r["date"] for r in rows)
-    p.months = max(1.0, (today - first).days / 30.4)
+    first, last = min(r["date"] for r in rows), max(r["date"] for r in rows)
+    p.months = max(1.0, (last - first).days / 30.4)
     cat, ret, cnt = defaultdict(float), defaultdict(float), defaultdict(int)
     for r in rows:
         if r["amount"] <= 0:

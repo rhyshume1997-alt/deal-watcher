@@ -7,7 +7,7 @@ import hashlib
 import io
 import logging
 import re
-from datetime import date, datetime
+from datetime import date, datetime, timedelta
 from pathlib import Path
 
 from .. import db, llm
@@ -84,17 +84,23 @@ _PDF_LINE = re.compile(
     r"(?P<amt>-?[\d,]+\.\d{2})(?P<cr>\s*CR)?$")
 
 
+def _statement_date(text: str) -> date | None:
+    m = re.search(r"Statement (?:Date|date)\D{0,20}(\d{1,2}[ /.][A-Za-z0-9]{2,9}[ /.]\d{2,4})", text)
+    if m:
+        return _parse_date(m.group(1).replace(".", "/"))
+    # Amex UK: "Prepared for Membership Number Date / NAME xxxx-xxxxxx-11000 28/04/26"
+    m = re.search(r"x{4}-x{6}-\d+\s+(\d{2}/\d{2}/\d{2,4})", text)
+    return _parse_date(m.group(1)) if m else None
+
+
 def parse_pdf_text(text: str) -> list[dict]:
     """Regex pass over Amex UK statement text. Returns [] if the layout isn't recognised."""
-    m = re.search(r"Statement (?:Date|date)\D{0,20}(\d{1,2}[ /.][A-Za-z0-9]{2,9}[ /.](\d{4}))", text)
-    year = int(m.group(2)) if m else date.today().year
-    stmt_month = None
-    if m:
-        sd = _parse_date(m.group(1).replace(".", "/"))
-        stmt_month = sd.month if sd else None
+    sd = _statement_date(text)
+    year = sd.year if sd else date.today().year
+    lines = [ln.strip() for ln in text.splitlines()]
     out = []
-    for line in text.splitlines():
-        mm = _PDF_LINE.match(line.strip())
+    for i, line in enumerate(lines):
+        mm = _PDF_LINE.match(line)
         if not mm:
             continue
         try:
@@ -102,15 +108,22 @@ def parse_pdf_text(text: str) -> list[dict]:
         except ValueError:
             continue
         # a December transaction on a January statement belongs to the previous year
-        if stmt_month and d.month > stmt_month + 1:
+        if sd and d > sd + timedelta(days=3):
             d = d.replace(year=year - 1)
         amt = float(mm["amt"].replace(",", ""))
-        if mm["cr"]:
+        # "CR" can sit on the next line, or at the end of a continuation line ("GOODS CR")
+        follow = []
+        for ln in lines[i + 1:i + 4]:
+            if _PDF_LINE.match(ln) or ln.lower().startswith("total"):
+                break
+            follow.append(ln)
+        if mm["cr"] or any(ln == "CR" or ln.endswith(" CR") for ln in follow):
             amt = -abs(amt)
         desc = mm["desc"].strip()
         if re.search(r"payment received|thank you", desc, re.I):
             amt = -abs(amt)
-        out.append({"date": d, "description": desc, "amount": amt, "amex_category": "", "ref": ""})
+        out.append({"date": d, "description": desc, "amount": amt, "amex_category": "",
+                    "ref": f"{d}|{desc}|{amt:.2f}|{i}"})
     return out
 
 
@@ -141,8 +154,8 @@ def store(conn, rows: list[dict], source: str) -> int:
     added = 0
     for r in rows:
         desc = r["description"]
-        if re.search(r"payment received|direct debit received|thank you", desc, re.I):
-            continue
+        if re.search(r"payment received|direct debit received|thank you|disputed charge", desc, re.I):
+            continue  # card payments and dispute holds/reversals aren't spending
         retailer, cat = categorise(desc, r.get("amex_category", ""))
         ext = r.get("ref") or hashlib.sha1(
             f"{r['date']}|{desc}|{r['amount']:.2f}".encode()).hexdigest()

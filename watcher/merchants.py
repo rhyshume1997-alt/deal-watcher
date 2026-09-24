@@ -8,9 +8,12 @@ from .config import retailers
 
 # Fallback keyword rules, checked in order, for merchants not in retailers.yaml.
 KEYWORD_RULES: list[tuple[str, str]] = [
-    (r"\b(deliveroo|just ?eat|uber ?eats|domino|papa john|pizza hut|kfc|mcdonald|burger king|five guys|greggs)\b", "takeaway"),
+    (r"\bmembership fee\b", "finance"),
+    (r"\b(deliveroo|just ?eat|uber ?eats|domino|papa john|pizza hut|kfc|mcdonald|burger king|five guys|greggs)", "takeaway"),
+    (r"\b(joe ?and ?the ?juice|thomsons ?coffee|wagamama|dishoom)", "restaurants"),
+    (r"\b(dental|dentist|pharmacy|boots\b|superdrug|beauty|tan\b|salon|barber)", "personal_care"),
     (r"\b(restaurant|grill|bistro|brasserie|kitchen|trattoria|pizzeria|steak|sushi|ramen|tapas|cafe|caff[eè]|coffee|costa|starbucks|pret|nando|wagamama|bar &|pub\b|tavern|inn\b)", "restaurants"),
-    (r"\b(airways|airlines|ryanair|easyjet|jet2|loganair|emirates|klm|lufthansa|jetstar|wizz|hotel|hotels|resort|hostel|airbnb|booking\.com|expedia|trivago|agoda|car hire|hertz|avis|europcar|enterprise rent|parking|lounge|trainline|lner|avanti|scotrail|eurostar|viaggiare)\b", "travel"),
+    (r"\b(airways|airlines|ryanair|easyjet|jet2|loganair|emirates|klm|lufthansa|jetstar|wizz|hotel|hotels|resort|hostel|airbnb|booking\.com|expedia|trivago|agoda|car hire|hertz|avis|europcar|enterprise rent|parking|lounge|trainline|lner|avanti|scotrail|eurostar|viaggiare|jet2)", "travel"),
     (r"\b(tesco|sainsbury|asda|morrisons|aldi|lidl|co-?op|waitrose|iceland|farmfoods|m&s food|ocado|costco)\b", "groceries"),
     (r"\b(protein|nutrition|supplement|bulk|myprotein|per4m|pitstop|grenade|optimum)\b", "supplements"),
     (r"\b(nespresso|coffee beans|pact coffee)\b", "coffee"),
@@ -22,7 +25,7 @@ KEYWORD_RULES: list[tuple[str, str]] = [
     (r"\b(jd sports|new balance|nike|adidas|footlocker|foot locker|office shoes|schuh|size\?)\b", "footwear"),
     (r"\b(spotify|netflix|disney|canva|google|youtube|apple\.com/bill|icloud|adobe|microsoft|chatgpt|openai|anthropic|claude|patreon|audible|kindle unlimited|now tv|dazn|sky\b)", "subscriptions"),
     (r"\b(ticketmaster|see tickets|eventbrite|axs|gigantic|skiddle|festival)\b", "events"),
-    (r"\b(shell|bp\b|esso|texaco|gulf|jet petrol|fuel|petrol|ev charg|insurance|confused\.com|admiral|aviva|direct line|halfords|kwik fit)\b", "fuel_car"),
+    (r"\b(shell|bp\b|esso|texaco|gulf|jet petrol|fuel|petrol|service stat|ev charg|insurance|confused\.com|admiral|aviva|direct line|halfords|kwik fit)\b", "fuel_car"),
 ]
 
 # Amex CSV "Category" column → our categories (prefix match, lower-cased).

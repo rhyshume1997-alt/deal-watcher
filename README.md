@@ -32,23 +32,23 @@ Each alert shows BUY NOW / WAIT / IGNORE, the offer, why it matters, the cash sa
 5. **Cooldowns**: after you buy something, similar alerts are held back (coffee 7 days, clothes 30, large electronics 180) unless the deal is exceptional.
 6. **Verdict**: WAIT if a known sale (Black Friday, Boxing Day, January sales, Prime Day) is close and this isn't a genuine low.
 
-## Setup (about 20 minutes, once)
+## Setup
 
-1. **Supabase** (free): create a project and copy the connection string (Settings → Database → Connection string → URI, pooler, port 6543) as `DATABASE_URL`.
-2. **Gmail app password**: Google Account → Security → 2-Step Verification (must be on) → App passwords → create one called "deal watcher".
-3. **Anthropic API key**: console.anthropic.com → API keys.
-4. **Keepa** (optional, for Amazon price history): keepa.com → API access.
-5. **Tracking function** (for the Useful / Not useful buttons):
-   ```
-   supabase functions deploy track --no-verify-jwt
-   supabase secrets set LINK_SECRET=<long random string>
-   ```
-   `TRACK_BASE_URL` is `https://<project-ref>.supabase.co/functions/v1/track`.
-6. **GitHub secrets** (repo → Settings → Secrets and variables → Actions):
-   `DATABASE_URL`, `GMAIL_ADDRESS`, `GMAIL_APP_PASSWORD`, `ANTHROPIC_API_KEY`, `TRACK_BASE_URL`, `LINK_SECRET` (same value as step 5), optionally `KEEPA_API_KEY` and `ALERT_TO` (if alerts should go somewhere other than your Gmail).
-7. Actions → **watch** → Run workflow with `setup-db`, then `doctor` (checks every source and credential), then `test-email`.
+The database (Supabase project `deal-watcher`, London), its tables and the tracking function are already set up.
+The link-signing secret is generated automatically and stored in the database.
 
-After that it runs by itself. The first run reads the last year of receipts and bookings from Gmail, spread over several runs to keep costs down.
+What's left is adding these **GitHub secrets** (repo → Settings → Secrets and variables → Actions → New repository secret):
+
+| Secret | Where to get it |
+|---|---|
+| `DATABASE_URL` | Supabase → project `deal-watcher` → Connect → Session pooler → URI (put your database password into it) |
+| `GMAIL_ADDRESS` | your Gmail address |
+| `GMAIL_APP_PASSWORD` | Google Account → Security → 2-Step Verification (must be on) → App passwords → create "deal watcher" |
+| `ANTHROPIC_API_KEY` | console.anthropic.com → API keys |
+| `KEEPA_API_KEY` | optional: keepa.com → API access |
+| `ALERT_TO` | optional: only if alerts should go to another address |
+
+Then go to Actions → **watch** → Run workflow, and run `doctor`, then `test-email`. After that it runs by itself every 30 minutes.
 
 ## Running locally
 

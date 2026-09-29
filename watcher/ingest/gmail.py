@@ -18,7 +18,7 @@ from pathlib import Path
 from bs4 import BeautifulSoup
 
 from .. import actions, db, llm
-from ..config import retailers, settings
+from ..config import retailers, settings, sources
 from ..models import Offer
 from . import amex
 
@@ -38,6 +38,11 @@ def _retailer_domains() -> list[str]:
 def _offer_query() -> str:
     doms = " OR ".join(["americanexpress.com", *_retailer_domains()])
     return f'from:({doms}) (offer OR "% off" OR sale OR cashback OR avios OR "extra points" OR voucher OR code)'
+
+
+def _newsletter_senders() -> list[str]:
+    return sorted({d for c in sources().get("newsletter", []) if c.get("enabled") is not False
+                   for d in c.get("senders", [])})
 
 
 def _hdr(msg: Message, name: str) -> str:
@@ -120,6 +125,8 @@ def handle_message(conn, msg: Message, kind: str, uid: str, llm_left: list[int])
     if llm_left[0] <= 0 or not llm.available():
         raise _Defer()
     llm_left[0] -= 1
+    if kind == "newsletter":
+        return f"newsletter: {_ingest_newsletter(conn, subject, body_text(msg), ref)}"
     info = llm.extract_email(conn, subject, sender, sent, body_text(msg))
     k = info.get("kind")
     if k == "purchase":
@@ -154,6 +161,20 @@ def handle_message(conn, msg: Message, kind: str, uid: str, llm_left: list[int])
         ingest_offers(conn, [offer])
         return f"offer: {o['summary']}"
     return f"ignored ({k})"
+
+
+def _ingest_newsletter(conn, subject: str, body: str, ref: str) -> dict:
+    offers = []
+    for n, d in enumerate(llm.extract_newsletter(conn, subject, body)):
+        offers.append(Offer(
+            source="newsletter", title=d["title"], url=d.get("url") or "", retailer=d.get("retailer"),
+            category=d.get("category"), product=d.get("product"), price=d.get("price"), was_price=d.get("was_price"),
+            code=d.get("code"), cashback_gbp=d.get("cashback_gbp"), amex_credit_gbp=d.get("amex_credit_gbp"),
+            avios=d.get("avios"), expires=actions._d(d.get("expires")), flags=d.get("flags") or [],
+            financial_bonus_gbp=d.get("financial_bonus_gbp"), competition_prize_gbp=d.get("competition_prize_gbp"),
+            one_line=d.get("one_line") or "", enriched=True, source_id=f"{ref}:{n}"))
+    from ..pipeline import ingest_offers
+    return ingest_offers(conn, offers)
 
 
 class _Defer(Exception):
@@ -191,6 +212,10 @@ def sync(conn) -> dict:
             todo.setdefault(u, "transactional")
         for u in _search(imap, f"{_offer_query()} newer_than:14d", last):
             todo.setdefault(u, "offer")
+        if _newsletter_senders():
+            senders = " OR ".join(_newsletter_senders())
+            for u in _search(imap, f"from:({senders}) newer_than:10d", last):
+                todo[u] = "newsletter"  # beats "offer": a newsletter holds many deals
         results = {"seen": len(todo), "done": 0, "deferred": 0}
         llm_left = [MAX_LLM_PER_TICK]
         for uid in sorted(todo):

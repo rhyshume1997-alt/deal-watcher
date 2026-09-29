@@ -15,7 +15,8 @@ TZ = ZoneInfo("Europe/London")
 
 
 def _env(name: str, default: str = "") -> str:
-    return os.environ.get(name, default).strip()
+    # GitHub passes unset secrets/variables as empty strings, so empty means "use the default"
+    return os.environ.get(name, "").strip() or default
 
 
 @dataclass

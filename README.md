@@ -63,7 +63,7 @@ Without `DATABASE_URL` it uses a local SQLite file.
 
 ## Adding a source
 
-Add an entry to `config/sources.yaml`, either an RSS feed, a Google News search or a page to watch for phrases like "on sale now". New retailers go in `config/retailers.yaml`. A new kind of source is a function in `watcher/sources/` that returns `Offer` objects; everything after that (scoring, emails, learning) is shared.
+Add an entry to `config/sources.yaml`, either an RSS feed, a page to watch for phrases like "on sale now", or a newsletter sender whose emails get read for deals. New retailers go in `config/retailers.yaml`. A new kind of source is a function in `watcher/sources/` that returns `Offer` objects; everything after that (scoring, emails, learning) is shared.
 
 ## Costs
 
@@ -76,5 +76,6 @@ Add an entry to `config/sources.yaml`, either an RSS feed, a Google News search 
 
 - **Amex Offers** have no API. Offers are picked up from Amex emails, anything you forward to `+watch`, and write-ups on Head for Points and HotUKDeals.
 - **Cashback sites** (TopCashback, Quidco) have no consumer API; cashback shows only when a deal post or email mentions it.
+- **MoneySavingExpert** blocks feed readers, so its deals come from its free weekly email instead. Subscribe once at moneysavingexpert.com/tips and the watcher reads each issue.
 - **Opens aren't tracked**, because Gmail pre-loads images and makes open tracking meaningless. Clicks and feedback are the signal.
 - The watcher respects `robots.txt` and spaces out requests to each site. Retailers that block automated requests can't be price-tracked directly; for those it relies on deal posts.

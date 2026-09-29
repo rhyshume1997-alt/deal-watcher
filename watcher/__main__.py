@@ -110,54 +110,97 @@ def main(argv: list[str] | None = None) -> int:
 
 
 def doctor(engine) -> int:
-    """Check credentials and every source. Safe to run any time; sends nothing."""
+    """Check credentials and every source. Safe to run any time; sends nothing.
+
+    Exits 1 only when something required is broken (database, Gmail, Claude). A deal source
+    failing is a warning: the watcher keeps running on the others.
+    """
+    from . import llm
     from .config import settings, sources
     from .sources import feeds, http
 
     s = settings()
-    ok = True
+    required_ok = True
 
-    def line(status: bool, name: str, detail: str = ""):
-        nonlocal ok
-        ok &= status
-        print(f"{'OK  ' if status else 'FAIL'} {name} {detail}")
+    def line(status: str, name: str, detail: str = ""):
+        print(f"{status:<4} {name} {detail}".rstrip())
 
-    line(True, "database", engine.dialect.name)
-    line(bool(s.gmail_address and s.gmail_app_password), "gmail credentials", s.gmail_address or "(missing)")
+    def need(ok: bool, name: str, detail: str = ""):
+        nonlocal required_ok
+        required_ok &= ok
+        line("OK" if ok else "FAIL", name, detail)
+
+    def optional(ok: bool, name: str, detail: str = ""):
+        line("OK" if ok else "WARN", name, detail)
+
+    print("Required")
+    need(True, "database", engine.dialect.name)
+    need(bool(s.gmail_address and s.gmail_app_password), "gmail credentials", s.gmail_address or "(missing)")
+    imap = None
     if s.gmail_address and s.gmail_app_password:
         import imaplib
 
         try:
-            m = imaplib.IMAP4_SSL("imap.gmail.com", 993)
-            m.login(s.gmail_address, s.gmail_app_password)
-            m.logout()
-            line(True, "gmail login")
+            imap = imaplib.IMAP4_SSL("imap.gmail.com", 993)
+            imap.login(s.gmail_address, s.gmail_app_password)
+            need(True, "gmail login")
         except Exception as e:
-            line(False, "gmail login", str(e)[:120])
-    line(bool(s.anthropic_api_key), "anthropic key", f"model {s.llm_model}")
-    line(bool(s.track_base_url), "tracking url", s.track_base_url or "(links will go straight to offers; no feedback)")
-    print("keepa key", "set" if s.keepa_api_key else "not set (Amazon prices use page data instead)")
+            imap = None
+            need(False, "gmail login", str(e)[:120])
+    if s.anthropic_api_key:
+        try:
+            with engine.begin() as conn:
+                llm.ping(conn)
+            need(True, "claude", f"model {s.llm_model} answered")
+        except llm.LLMUnavailable as e:
+            need(False, "claude", f"model {s.llm_model}: {e}")
+    else:
+        need(False, "claude", "ANTHROPIC_API_KEY missing")
+    need(bool(s.track_base_url), "tracking url", s.track_base_url or "(missing)")
+
+    print("\nOptional (a failure here only means fewer deals)")
+    optional(bool(s.keepa_api_key), "keepa", "set" if s.keepa_api_key else "not set: Amazon prices come from page data")
     cfg = sources()
     for kind in ("deal_feed", "blog_feed"):
         for c in cfg.get(kind, []):
+            if c.get("enabled") is False:
+                line("OFF", c["id"])
+                continue
             try:
                 url, feed = feeds.fetch_feed(c["urls"])
-                line(True, c["id"], f"{len(feed.entries)} items via {url}")
+                optional(True, c["id"], f"{len(feed.entries)} items via {url}")
             except Exception as e:
-                line(False, c["id"], str(e)[:150])
-    for c in cfg.get("news_query", []):
-        try:
-            n = len(feeds.news_query(c))
-            line(True, c["id"], f"{n} recent matches")
-        except Exception as e:
-            line(False, c["id"], str(e)[:150])
+                optional(False, c["id"], str(e).splitlines()[0][:150])
     for c in cfg.get("page_watch", []):
+        if c.get("enabled") is False:
+            line("OFF", c["id"])
+            continue
         try:
-            http.get(c["url"])
-            line(True, c["id"])
+            url = feeds.resolve_page(c)
+            http.get(url)
+            optional(True, c["id"], url)
         except Exception as e:
-            line(False, c["id"], str(e)[:150])
-    return 0 if ok else 1
+            optional(False, c["id"], str(e).splitlines()[0][:150])
+    for c in cfg.get("newsletter", []):
+        if imap is None:
+            optional(False, c["id"], "can't check without Gmail")
+            continue
+        try:
+            imap.select('"[Gmail]/All Mail"', readonly=True)
+            senders = " OR ".join(c["senders"])
+            typ, data = imap.uid("SEARCH", "X-GM-RAW", f'"from:({senders}) newer_than:14d"')
+            n = len(data[0].split()) if typ == "OK" and data and data[0] else 0
+            optional(n > 0, c["id"], f"{n} emails in the last 14 days" if n
+                     else f"no emails from {', '.join(c['senders'])} yet: subscribe to get these deals")
+        except Exception as e:
+            optional(False, c["id"], str(e)[:150])
+    if imap is not None:
+        try:
+            imap.logout()
+        except Exception:
+            pass
+    print("\n" + ("All required checks passed." if required_ok else "A required check failed - see FAIL above."))
+    return 0 if required_ok else 1
 
 
 if __name__ == "__main__":

@@ -5,7 +5,7 @@ import hashlib
 import logging
 import re
 from datetime import date, datetime, timedelta, timezone
-from urllib.parse import quote_plus
+from urllib.parse import quote_plus, urljoin
 
 import feedparser
 from bs4 import BeautifulSoup
@@ -113,6 +113,13 @@ def _keyword_hit(text: str, keywords: list[str]) -> bool:
     return any(k.lower() in t for k in keywords)
 
 
+def keep_post(text: str, cfg: dict) -> bool:
+    """`keywords`: any one must match. `keywords_all`: each group must have a match."""
+    if cfg.get("keywords") and not _keyword_hit(text, cfg["keywords"]):
+        return False
+    return all(_keyword_hit(text, group) for group in cfg.get("keywords_all") or [])
+
+
 def blog_feed(cfg: dict) -> list[Offer]:
     _, feed = fetch_feed(cfg["urls"])
     out = []
@@ -120,32 +127,32 @@ def blog_feed(cfg: dict) -> list[Offer]:
         if not _fresh(e, 96):
             continue
         title, summary = e.get("title", ""), _text(e.get("summary", ""))
-        if cfg.get("keywords") and not _keyword_hit(f"{title} {summary}", cfg["keywords"]):
+        if not keep_post(f"{title} {summary}", cfg):
             continue
         out.append(Offer(source=cfg["id"], title=title, url=e.get("link", ""), summary=summary[:1200],
-                         category=cfg.get("category"), source_id=e.get("id") or e.get("link")))
+                         category=cfg.get("category"), flags=["f1"] if cfg.get("category") == "f1" else [],
+                         source_id=e.get("id") or e.get("link")))
     return out
 
 
-def news_query(cfg: dict) -> list[Offer]:
-    url = f"https://news.google.com/rss/search?q={quote_plus(cfg['q'])}+when:3d&hl=en-GB&gl=GB&ceid=GB:en"
-    _, feed = fetch_feed([url])
-    out = []
-    for e in feed.entries:
-        if not _fresh(e, 72):
-            continue
-        title, summary = e.get("title", ""), _text(e.get("summary", ""))
-        if cfg.get("keywords") and not _keyword_hit(f"{title} {summary}", cfg["keywords"]):
-            continue
-        flags = ["f1"] if cfg.get("category") == "f1" else []
-        out.append(Offer(source=cfg["id"], title=title, url=e.get("link", ""), summary=summary[:600],
-                         category=cfg.get("category"), flags=flags, source_id=e.get("id") or e.get("link")))
-    return out
+def resolve_page(cfg: dict) -> str:
+    """The page to watch: `url`, or the first link on `listing_url` whose text matches `find_link`."""
+    if cfg.get("url"):
+        return cfg["url"]
+    r = http.get(cfg["listing_url"])
+    soup = BeautifulSoup(r.text, "html.parser")
+    wanted = [w.lower() for w in cfg["find_link"]]
+    for a in soup.find_all("a", href=True):
+        label = " ".join([a.get_text(" "), a.get("title", ""), a.get("aria-label", "")]).lower()
+        if any(w in label for w in wanted):
+            return urljoin(str(r.url), a["href"])
+    raise LookupError(f"no link matching {cfg['find_link']} on {cfg['listing_url']}")
 
 
 def page_watch(conn, cfg: dict) -> list[Offer]:
     """Alert when a watched phrase newly appears on a page (e.g. 'on sale now', 'presale')."""
-    r = http.get(cfg["url"])
+    url = resolve_page(cfg)
+    r = http.get(url)
     text = _text(r.text).lower()
     phrases = sorted({p for p in cfg["alert_on"] if p.lower() in text})
     key = f"page_watch:{cfg['id']}"
@@ -157,7 +164,7 @@ def page_watch(conn, cfg: dict) -> list[Offer]:
     new = [p for p in phrases if p not in prev.get("phrases", [])]
     if not new:
         return []
-    return [Offer(source=cfg["id"], title=f"{cfg['title']}: now shows “{', '.join(new)}”", url=cfg["url"],
+    return [Offer(source=cfg["id"], title=f"{cfg['title']}: now shows “{', '.join(new)}”", url=url,
                   category=cfg.get("category"), flags=["f1"] if cfg.get("category") == "f1" else ["restock"],
                   summary=f"Page changed. New phrases: {', '.join(new)}", enriched=True,
                   source_id=f"{cfg['id']}:{date.today()}:{'|'.join(new)}")]

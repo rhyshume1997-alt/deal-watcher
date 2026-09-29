@@ -91,6 +91,12 @@ def call_json(conn, system: str, user_content, schema: dict, max_tokens: int = 4
     return json.loads(text)
 
 
+def ping(conn) -> str:
+    """Tiny real call used by `doctor` to prove the key and model work."""
+    out = call_json(conn, "Reply with the word ok.", "ping", _obj({"reply": {"type": "string"}}), max_tokens=1000)
+    return out.get("reply", "")
+
+
 def _obj(props: dict, required: list[str] | None = None) -> dict:
     return {"type": "object", "properties": props,
             "required": required if required is not None else list(props), "additionalProperties": False}
@@ -181,6 +187,27 @@ def classify_deals(conn, posts: list[dict]) -> list[dict]:
         lines.append(f"[{i}] {p.get('title','')}\n{(p.get('summary') or '')[:600]}\nmerchant hint: "
                      f"{p.get('merchant') or '-'}; price hint: {p.get('price') or '-'}")
     out = call_json(conn, DEAL_SYSTEM, "\n\n".join(lines), DEAL_SCHEMA, max_tokens=6000)
+    return out.get("deals", [])
+
+
+# ---------------------------------------------------------------- newsletters
+
+_DEAL_ITEM = DEAL_SCHEMA["properties"]["deals"]["items"]
+NEWSLETTER_SCHEMA = _obj({"deals": {"type": "array", "items": _obj({
+    **{k: v for k, v in _DEAL_ITEM["properties"].items() if k != "i"},
+    "title": {"type": "string"},
+    "url": {**_STR, "description": "the deal's own link from the email, if present"},
+})}})
+
+NEWSLETTER_SYSTEM = DEAL_SYSTEM + (
+    " The input is one deals newsletter (e.g. MoneySavingExpert's weekly email). List each concrete, "
+    "specific offer separately; skip editorial chat, adverts, competitions under £500 and vague sales."
+)
+
+
+def extract_newsletter(conn, subject: str, body: str) -> list[dict]:
+    out = call_json(conn, NEWSLETTER_SYSTEM, f"Subject: {subject}\n\n{body[:30000]}", NEWSLETTER_SCHEMA,
+                    max_tokens=12000)
     return out.get("deals", [])
 
 

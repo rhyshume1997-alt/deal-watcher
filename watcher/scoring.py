@@ -35,6 +35,7 @@ class Decision:
     drop_reason: str | None = None
     planned_hit: bool = False
     components: dict = field(default_factory=dict)        # shown separately in the email
+    value_gbp: float = 0.0                                # cash value when there's no price (bonus, credit)
 
     def drop(self, why: str) -> "Decision":
         self.tier, self.verdict, self.drop_reason = "drop", "IGNORE", why
@@ -203,6 +204,7 @@ def evaluate(conn, offer: Offer, profile: SpendProfile, today: date | None = Non
 
     # ---------------- value gates by offer type
     passes, force_instant = False, False
+    value_pct = pct  # how strong the offer is, on the same 0..1 scale as "% off"
     if "f1" in flags or category == "f1":
         passes, force_instant = True, True
         d.reasons.insert(0, "F1 tickets/experiences – these go fast")
@@ -213,6 +215,7 @@ def evaluate(conn, offer: Offer, profile: SpendProfile, today: date | None = Non
     elif flags & {"freebie", "sample"}:
         passes = heat >= 200 or relevance >= 0.45
         force_instant = passes and heat >= 800
+        value_pct = 0.5
         d.reasons.append("Free")
     elif "competition" in flags:
         passes = (offer.competition_prize_gbp or 0) >= 500 and relevance >= 0.5
@@ -222,16 +225,22 @@ def evaluate(conn, offer: Offer, profile: SpendProfile, today: date | None = Non
         if passes:
             d.reasons.append(f"£{bonus:,.0f} bonus")
             comp.setdefault("Bonus", bonus)
+            d.value_gbp = bonus
+            value_pct = min(0.6, bonus / 250)
     elif "amex_offer" in flags:
         credit = offer.amex_credit_gbp or 0
         passes = relevance >= 0.3 and (credit >= 10 or (offer.avios or 0) >= 1000)
         force_instant = passes and relevance >= 0.6 and credit >= 20
         d.reasons.append("Amex Offer – add it to your card before it fills up")
+        d.value_gbp = max(d.value_gbp, credit)
+        value_pct = max(pct, min(0.6, credit / 100)) + (0.1 if (offer.avios or 0) >= 1000 else 0)
     elif "free_trial" in flags:
         passes = relevance >= 0.45
+        value_pct = 0.3
     elif offer.price is None and not offer.was_price:
         # editorial post with no numbers: only keep concrete travel/Avios/Amex news
         passes = bool(flags & {"avios", "travel", "amex_offer", "stackable"}) and relevance >= 0.5 and bool(offer.one_line)
+        value_pct = 0.3
     else:
         min_saving, min_pct = rules["min_saving"], rules["min_pct"]
         if saving >= min_saving and pct >= min_pct:
@@ -262,7 +271,7 @@ def evaluate(conn, offer: Offer, profile: SpendProfile, today: date | None = Non
         return d.drop(f"cooldown: {cd}")
 
     # ---------------- score
-    strength = 0.5 + min(pct, 0.6) * 1.5 + 0.12 * max(0, stack_count - 1) + min(0.3, heat / 3000)
+    strength = 0.5 + min(value_pct, 0.6) * 1.5 + 0.12 * max(0, stack_count - 1) + min(0.3, heat / 3000)
     if lowest:
         strength += 0.25
     elif unusual:

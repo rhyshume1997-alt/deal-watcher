@@ -94,3 +94,23 @@ def test_feedback_lowers_score(conn):
     o2 = Offer(source="hukd_hot", title="Hoodie", url="u", retailer="TALA", price=30, was_price=50)
     after = evaluate(conn, o2, prof(TALA=300), today=TODAY).score
     assert after < before
+
+
+def test_bank_switch_bonus_passes_without_a_price(conn):
+    o = Offer(source="newsletter", title="£175 to switch", url="u", category="finance", flags=["financial"],
+              financial_bonus_gbp=175)
+    d = evaluate(conn, o, prof(), today=TODAY)
+    assert d.tier == "digest" and d.value_gbp == 175 and d.components == {"Bonus": 175}
+
+
+def test_small_bank_bonus_dropped(conn):
+    o = Offer(source="newsletter", title="£50 to switch", url="u", category="finance", flags=["financial"],
+              financial_bonus_gbp=50)
+    assert evaluate(conn, o, prof(), today=TODAY).tier == "drop"
+
+
+def test_amex_offer_credit_scores_on_its_value(conn):
+    o = Offer(source="gmail", title="Spend £60, get £20 back", url="u", retailer="M&S", flags=["amex_offer"],
+              amex_credit_gbp=20)
+    d = evaluate(conn, o, prof(**{"M&S": 1200}), today=TODAY)
+    assert d.tier in ("digest", "instant") and d.value_gbp == 20

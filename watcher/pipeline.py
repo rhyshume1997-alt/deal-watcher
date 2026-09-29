@@ -153,7 +153,7 @@ def ingest_offers(conn, offers: list[Offer], today: date | None = None) -> dict:
         _create_alert(conn, kind="planned" if d.planned_hit else ("f1" if o.category == "f1" else "deal"),
                       tier=d.tier, verdict=d.verdict, score=d.score, offer_id=oid, dedupe_key=dedupe,
                       title=o.title, retailer=o.retailer, category=o.category, url=o.url,
-                      est_saving=o.cash_saving, payload={
+                      est_saving=max(o.cash_saving, d.value_gbp), payload={
                           "headline": o.retailer or (o.product or o.title)[:50],
                           "offer_line": _offer_line(o) if o.retailer else (o.one_line or o.title)[:120],
                           "reasons": d.reasons, "history_note": d.history_note, "urgency_note": d.urgency_note,
@@ -199,9 +199,11 @@ def run_sources(conn, only: str | None = None) -> dict:
     cfg = source_cfg()
     out = {}
     runners = [("deal_feed", lambda c: feeds.deal_feed(c)), ("blog_feed", lambda c: feeds.blog_feed(c)),
-               ("news_query", lambda c: feeds.news_query(c)), ("page_watch", lambda c: feeds.page_watch(conn, c))]
+               ("page_watch", lambda c: feeds.page_watch(conn, c))]
     for kind, fn in runners:
         for c in cfg.get(kind, []):
+            if c.get("enabled") is False:
+                continue
             if only and c["id"] != only:
                 continue
             if not only and not _due(conn, c["id"], c.get("interval_min", 60)):

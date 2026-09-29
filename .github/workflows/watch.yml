@@ -31,6 +31,7 @@ jobs:
           GMAIL_APP_PASSWORD: ${{ secrets.GMAIL_APP_PASSWORD }}
           ALERT_TO: ${{ secrets.ALERT_TO }}
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          ANTHROPIC_WORKSPACE_ID: ${{ secrets.ANTHROPIC_WORKSPACE_ID }}
           KEEPA_API_KEY: ${{ secrets.KEEPA_API_KEY }}
           TRACK_BASE_URL: ${{ vars.TRACK_BASE_URL || 'https://exgnipulpznzhpryznuc.supabase.co/functions/v1/track' }}
           LLM_MODEL: ${{ vars.LLM_MODEL }}

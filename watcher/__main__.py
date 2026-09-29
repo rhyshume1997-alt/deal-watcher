@@ -153,7 +153,12 @@ def doctor(engine) -> int:
                 llm.ping(conn)
             need(True, "claude", f"model {s.llm_model} answered")
         except llm.LLMUnavailable as e:
-            need(False, "claude", f"model {s.llm_model}: {e}")
+            hint = ""
+            if "workspace" in str(e).lower():
+                hint = (" -> fix: create the key inside a workspace (console.anthropic.com -> Settings -> "
+                        "Workspaces -> Default -> API keys) and replace ANTHROPIC_API_KEY, or add an "
+                        "ANTHROPIC_WORKSPACE_ID secret")
+            need(False, "claude", f"model {s.llm_model}: {str(e)[:200]}{hint}")
     else:
         need(False, "claude", "ANTHROPIC_API_KEY missing")
     need(bool(s.track_base_url), "tracking url", s.track_base_url or "(missing)")

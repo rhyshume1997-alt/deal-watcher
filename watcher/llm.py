@@ -40,7 +40,11 @@ def available() -> bool:
 def _client_() -> anthropic.Anthropic:
     global _client
     if _client is None:
-        _client = anthropic.Anthropic(api_key=settings().anthropic_api_key, max_retries=3, timeout=120)
+        s = settings()
+        # A key that isn't scoped to a workspace needs the workspace named on every request.
+        headers = {"anthropic-workspace-id": s.anthropic_workspace_id} if s.anthropic_workspace_id else None
+        _client = anthropic.Anthropic(api_key=s.anthropic_api_key, max_retries=3, timeout=120,
+                                      default_headers=headers)
     return _client
 
 

@@ -142,11 +142,15 @@ def resolve_page(cfg: dict) -> str:
     r = http.get(cfg["listing_url"])
     soup = BeautifulSoup(r.text, "html.parser")
     wanted = [w.lower() for w in cfg["find_link"]]
-    for a in soup.find_all("a", href=True):
+    slugs = [w.replace(" ", "-") for w in wanted]
+    links = soup.find_all("a", href=True)
+    for a in links:
         label = " ".join([a.get_text(" "), a.get("title", ""), a.get("aria-label", "")]).lower()
-        if any(w in label for w in wanted):
+        # match the visible text, or the address itself (cards often have no text, e.g. /f1-3304-great-britain)
+        if any(w in label for w in wanted) or any(sl in a["href"].lower() for sl in slugs):
             return urljoin(str(r.url), a["href"])
-    raise LookupError(f"no link matching {cfg['find_link']} on {cfg['listing_url']}")
+    raise LookupError(f"no link matching {cfg['find_link']} on {cfg['listing_url']} "
+                      f"({len(links)} links on the page{'; it is probably built by JavaScript' if len(links) < 5 else ''})")
 
 
 def page_watch(conn, cfg: dict) -> list[Offer]:

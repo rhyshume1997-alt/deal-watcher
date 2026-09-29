@@ -26,6 +26,7 @@ class Settings:
     gmail_app_password: str = field(default_factory=lambda: _env("GMAIL_APP_PASSWORD").replace(" ", ""))
     alert_to: str = field(default_factory=lambda: _env("ALERT_TO"))
     anthropic_api_key: str = field(default_factory=lambda: _env("ANTHROPIC_API_KEY"))
+    anthropic_workspace_id: str = field(default_factory=lambda: _env("ANTHROPIC_WORKSPACE_ID"))  # only for org-level keys
     llm_model: str = field(default_factory=lambda: _env("LLM_MODEL", "claude-opus-5"))
     llm_monthly_call_cap: int = field(default_factory=lambda: int(_env("LLM_MONTHLY_CALL_CAP", "3000")))
     keepa_api_key: str = field(default_factory=lambda: _env("KEEPA_API_KEY"))

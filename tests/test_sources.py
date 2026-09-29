@@ -53,3 +53,18 @@ def test_newsletter_email_becomes_scored_offers(conn, sent, monkeypatch):
     assert out.startswith("newsletter:") and "digest" in out
     row = conn.execute(select(db.alerts).where(db.alerts.c.tier == "digest")).mappings().first()
     assert row["retailer"] == "Nationwide"
+
+
+def test_find_link_matches_address_when_card_has_no_text(monkeypatch):
+    html = '<a href="/en/f1-111-monaco"><img alt=""></a><a href="/en/f1-3310-great-britain"><img alt=""></a>'
+    monkeypatch.setattr(feeds.http, "get", lambda url: SimpleNamespace(text=html, url="https://tickets.formula1.com/en"))
+    cfg = {"listing_url": "https://tickets.formula1.com/en", "find_link": ["great britain"]}
+    assert feeds.resolve_page(cfg) == "https://tickets.formula1.com/en/f1-3310-great-britain"
+
+
+def test_workspace_header_sent_when_configured(monkeypatch):
+    monkeypatch.setattr(llm, "_client", None)
+    monkeypatch.setattr(llm, "settings", lambda: SimpleNamespace(anthropic_api_key="k", anthropic_workspace_id="wrkspc_1"))
+    c = llm._client_()
+    assert c._custom_headers.get("anthropic-workspace-id") == "wrkspc_1"
+    monkeypatch.setattr(llm, "_client", None)

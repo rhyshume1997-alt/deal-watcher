@@ -70,7 +70,11 @@ page_watch:
     category: f1
     title: Silverstone - British Grand Prix tickets
     alert_on: [on sale now, buy tickets, presale, pre-sale, general sale, waiting list, released, restock, back on sale]
+  # Off: the F1 ticket store builds its race list with JavaScript (only 2 links in the raw page),
+  # so there's nothing to follow. silverstone_tickets covers the British GP; the F1 news feeds
+  # above cover ticket releases for every race.
   - id: f1_tickets_gb
+    enabled: false
     listing_url: "https://tickets.formula1.com/en"
     find_link: [great britain, british grand prix, silverstone]
     interval_min: 30
